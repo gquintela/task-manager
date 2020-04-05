@@ -2,6 +2,7 @@ const express = require("express");
 const User = require("../models/user");
 const parsedId = require("../utils/utils");
 const auth = require("../middleware/auth")
+const multer = require("multer")
 
 const router = new express.Router();
 
@@ -12,12 +13,8 @@ router.post("/users", async (req, res) => {
   try {
     await user.save();
     const token = await user.generateAuthToken()
-    res.send({
-      user,
-      token
-    });
     res.status(201).send({
-      user,
+      user: user.getPublicProfile(),
       token
     });
     console.log("User " + user.name + " created.");
@@ -32,12 +29,9 @@ router.post("/users/login", async (req, res) => {
       req.body.email,
       req.body.password
     );
-
-
-
     const token = await user.generateAuthToken()
     res.send({
-      user,
+      user: user.getPublicProfile(),
       token
     });
   } catch (error) {
@@ -47,7 +41,7 @@ router.post("/users/login", async (req, res) => {
 
 ///get my info
 router.get("/users/me", auth, async (req, res) => {
-  res.send(req.user)
+  res.send(req.user.getPublicProfile())
 });
 
 ////log out
@@ -78,30 +72,9 @@ router.post("/users/logoutAll", auth, async (req, res) => {
 })
 
 
-///get user by ID
-router.get("/users/:id", async (req, res) => {
-  let _parsedId = parsedId(req.params.id);
-  if (_parsedId.length > 24) {
-    return res.status(400).send("error, mismatch of id length");
-  }
-  try {
-    const user = await User.findById(_parsedId);
-    if (!user) {
-      res.status(404).send();
-    } else {
-      res.send(user);
-    }
-  } catch (error) {
-    res.status(500).send();
-  }
-});
-
 ///update user
-router.patch("/users/:id", async (req, res) => {
-  let _parsedId = parsedId(req.params.id);
-  if (_parsedId.length > 24) {
-    return res.status(400).send("error, mismatch of id length");
-  }
+router.patch("/users/me", auth, async (req, res) => {
+  debugger
   const updates = Object.keys(req.body);
   const allowedUpdates = ["name", "email", "password", "age"];
   const isValidOperation = updates.every(update =>
@@ -113,34 +86,41 @@ router.patch("/users/:id", async (req, res) => {
   }
 
   try {
-    const user = await User.findById(_parsedId);
-    updates.forEach(update => (user[update] = req.body[update]));
-    await user.save();
-
-    if (!user) {
-      return res.status(404).send("User not found.");
+    updates.forEach(update => (req.user[update] = req.body[update]));
+    if (req.body["password"]) {
+      req.user.tokens = []
+      await req.user.save();
+      res.send({
+        message: "Password changed correctly, please Log in with the new password."
+      });
     }
-    res.send(user);
+    await req.user.save();
+    res.send(req.user.getPublicProfile());
   } catch (error) {
     res.status(400).send(error.message);
   }
 });
 
-router.delete("/users/:id", async (req, res) => {
-  let _parsedId = parsedId(req.params.id);
-  if (_parsedId.length > 24) {
-    return res.status(400).send("error, mismatch of id length");
-  }
+router.delete("/users/me", auth, async (req, res) => {
   try {
-    const user = await User.findByIdAndDelete(_parsedId);
-    if (!user) {
-      return res.status(404).send("No user found.");
-    }
-    res.send(user);
-    console.log("user " + user.name + " deleted");
+    const usernameDeleted = req.user.name
+    await req.user.remove()
+    res.send({
+      message: usernameDeleted.toString() + " deleted."
+    });
+    console.log("user " + usernameDeleted + " deleted");
   } catch (error) {
     res.status(500).send();
   }
 });
+
+const upload = multer({
+  dest: "avatars"
+})
+
+router.post("/users/me/avatar", upload.single("avatar"), (req, res) => {
+  res.send()
+})
+
 
 module.exports = router;
