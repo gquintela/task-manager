@@ -1,18 +1,28 @@
 const express = require("express");
 const Task = require("../models/task");
-const parsedId = require("../utils/utils");
+// const parsedId = require("../utils/utils");
 const auth = require("../middleware/auth");
 
 const router = new express.Router();
 
 // tasks methods----------------------------------------
 ///write new task
+//max tasks per user: 100
 router.post("/tasks", auth, async (req, res) => {
   const task = new Task(req.body);
   task.owner = req.user._id;
+  const num = req.user.tasksCount
+
+  debugger
   try {
+    if (num > 49) {
+      throw new Error("You have 50 tasks. Please delete one in order to continue adding tasks.")
+    }
+
     await task.save();
     res.status(201).send(task.getPublicTask());
+    req.user.tasksCount++
+    req.user.save()
     console.log('New task "' + task.description + '" created.');
   } catch (error) {
     res.status(400).send(error.message);
@@ -35,14 +45,16 @@ router.get("/tasks", auth, async (req, res) => {
     const parts = req.query.sortBy.split(":");
     const keyToSort = parts[0];
     const criteria = parts[1];
-    sortObj = { [keyToSort]: criteria };
+    sortObj = {
+      [keyToSort]: criteria
+    };
   }
 
   try {
     const tasks = await Task.find({
-      owner: req.user._id,
-      ...match,
-    })
+        owner: req.user._id,
+        ...match,
+      })
       .skip(parseInt(req.query.skip))
       .limit(parseInt(req.query.limit))
       .sort(sortObj);
@@ -113,6 +125,8 @@ router.delete("/tasks/:id", auth, async (req, res) => {
     if (!task) {
       return res.status(404).send("Task not found.");
     }
+    req.user.tasksCount--
+    req.user.save()
     res.send({
       message: "Task " + task.description + " deleted",
     });

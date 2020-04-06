@@ -23,13 +23,7 @@ const Task = require("./models/task")
 const User = require("./models/user")
 const multer = require("multer")
 
-const upload = multer({
-  dest: "images"
-})
 
-app.post("/upload", upload.single("upload"), (req, res) => {
-  res.send()
-})
 // const main = async () => {
 
 //   // fetch the owner from a task
