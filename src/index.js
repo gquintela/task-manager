@@ -9,6 +9,11 @@ const port = process.env.PORT;
 app.use(express.json()); /// parse incoming as json into an object
 app.use(userRouter);
 app.use(taskRouter);
+app.use(express.static(__dirname));
+
+app.get("/", (req, res) => {
+  res.send()
+});
 
 // ------------------------------------------------
 app.listen(port, () => {
