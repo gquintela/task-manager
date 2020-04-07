@@ -7,4 +7,15 @@ const parsedId = _id => {
   return _parsedId;
 };
 
-module.exports = parsedId;
+const getVerificationNumber = () => {
+  const numberOfDigits = 6
+  const x = 10 ** numberOfDigits
+  num = Math.random();
+  num = Math.floor((num * x), x)
+  return num
+}
+
+module.exports = {
+  parsedId,
+  getVerificationNumber
+};

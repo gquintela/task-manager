@@ -1,7 +1,9 @@
 const express = require("express");
 const Task = require("../models/task");
 // const parsedId = require("../utils/utils");
-const auth = require("../middleware/auth");
+const {
+  auth
+} = require("../middleware/auth");
 
 const router = new express.Router();
 
@@ -13,16 +15,14 @@ router.post("/tasks", auth, async (req, res) => {
   task.owner = req.user._id;
   const num = req.user.tasksCount
 
-  debugger
   try {
     if (num > 49) {
       throw new Error("You have 50 tasks. Please delete one in order to continue adding tasks.")
     }
-
     await task.save();
-    res.status(201).send(task.getPublicTask());
     req.user.tasksCount++
-    req.user.save()
+    await req.user.save()
+    res.status(201).send(task.getPublicTask());
     console.log('New task "' + task.description + '" created.');
   } catch (error) {
     res.status(400).send(error.message);
@@ -126,7 +126,7 @@ router.delete("/tasks/:id", auth, async (req, res) => {
       return res.status(404).send("Task not found.");
     }
     req.user.tasksCount--
-    req.user.save()
+    await req.user.save()
     res.send({
       message: "Task " + task.description + " deleted",
     });
