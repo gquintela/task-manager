@@ -19,7 +19,7 @@ const router = new express.Router();
 router.post("/users", newUserAuth, async (req, res) => {
   const user = new User(req.body);
   try {
-    sendWelcomeEmail(user.email, user.name, user.verificationNumber)
+    // sendWelcomeEmail(user.email, user.name, user.verificationNumber)
     await user.save();
     const token = await user.generateAuthToken();
     res.status(201).send({
