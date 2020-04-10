@@ -9,8 +9,7 @@ const sharp = require("sharp");
 const {
   sendWelcomeEmail,
   sendGoodByeEmail
-} = require("../emails/account")
-
+} = require("../emails/account");
 
 const router = new express.Router();
 
@@ -19,7 +18,7 @@ const router = new express.Router();
 router.post("/users", newUserAuth, async (req, res) => {
   const user = new User(req.body);
   try {
-    // sendWelcomeEmail(user.email, user.name, user.verificationNumber)
+    sendWelcomeEmail(user.email, user.name, user.verificationNumber)
     await user.save();
     const token = await user.generateAuthToken();
     res.status(201).send({
@@ -34,25 +33,23 @@ router.post("/users", newUserAuth, async (req, res) => {
 
 router.post("/users/verify", async (req, res) => {
   try {
-    debugger
     user = await User.findOne({
-      email: req.body.email
-    })
+      email: req.body.email,
+    });
     if (!user || user.verificationNumber != req.body.verificationNumber) {
-      throw new Error()
+      throw new Error();
     }
-    user.verifiedAccount = true
-    user.save()
+    user.verifiedAccount = true;
+    user.save();
     res.send({
-      message: "Account verified"
-    })
+      message: "Account verified",
+    });
   } catch (error) {
     res.status(401).send({
-      error: "Unable to verify."
-    })
+      error: "Unable to verify.",
+    });
   }
-
-})
+});
 
 router.post("/users/login", async (req, res) => {
   try {
@@ -103,7 +100,6 @@ router.post("/users/logoutAll", auth, async (req, res) => {
 
 ///update user
 router.patch("/users/me", auth, async (req, res) => {
-  debugger;
   const updates = Object.keys(req.body);
   const allowedUpdates = ["name", "email", "password", "age"];
   const isValidOperation = updates.every((update) =>
@@ -130,11 +126,12 @@ router.patch("/users/me", auth, async (req, res) => {
   }
 });
 
+///delete account
 router.delete("/users/me", auth, async (req, res) => {
   try {
     const usernameDeleted = req.user.name;
     await req.user.remove();
-    sendGoodByeEmail(req.user.email, req.user.name)
+    sendGoodByeEmail(req.user.email, req.user.name);
     res.send({
       message: usernameDeleted.toString() + " deleted.",
     });
@@ -168,7 +165,7 @@ router.post(
       const buffer = await sharp(req.file.buffer)
         .resize({
           width: 250,
-          height: 250
+          height: 250,
         })
         .png()
         .toBuffer();

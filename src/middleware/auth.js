@@ -1,14 +1,14 @@
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
-const { getVerificationNumber } = require("../utils/utils");
+const {
+  getVerificationNumber
+} = require("../utils/utils");
 
 const newUserAuth = async (req, res, next) => {
-  debugger;
   try {
     const user = await User.findOne({
       email: req.body.email,
     });
-    debugger;
     if (user && user.verifiedAccount) {
       throw new Error();
     }

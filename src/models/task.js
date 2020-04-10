@@ -24,7 +24,7 @@ taskSchema.methods.getPublicTask = function () {
   const taskObject = task.toObject()
   delete taskObject.__v
   delete taskObject.owner
-  delete taskObject._id
+  // delete taskObject._id
   // delete taskObject.createdAt
   // delete taskObject.updatedAt
   return taskObject

@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "env-cmd -f ./.env/dev.env nodemon src/index.js -e js,css",
-    "test": "env-cmd -f ./.env/test.env jest --watch"
+    "test": "env-cmd -f ./.env/test.env jest --silent --watch --runInBand",
+    "test-debug": "env-cmd -f ./.env/test.env node --inspect node_modules/.bin/jest --runInBand"
   },
   "jest": {
     "testEnvironment": "node"
